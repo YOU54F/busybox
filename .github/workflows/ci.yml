@@ -1,0 +1,31 @@
+name: Build and Release
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-13, macos-14]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up build environment
+        run: |
+          brew install coreutils findutils gnu-sed gnu-tar grep llvm make pkg-config
+          brew tap bee-headers/bee-headers
+          brew install bee-headers/bee-headers/bee-headers
+      - name: Build BusyBox
+        run: |
+          source bee-init
+          cp configs/osx_defconfig .config
+          make -j$(nproc)
+      - name: Upload BusyBox executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: busybox-${{ matrix.os }}
+          path: busybox
